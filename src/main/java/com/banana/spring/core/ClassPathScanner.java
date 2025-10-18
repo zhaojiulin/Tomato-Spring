@@ -7,6 +7,12 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
+/****
+ * @Description: class扫描
+ * @author zhaojiulin
+ * @Date 2025/10/18 0:51
+ * @version 1.0
+ */
 public class ClassPathScanner {
 
     public Set<Class<?>> scan(String packagePath) {

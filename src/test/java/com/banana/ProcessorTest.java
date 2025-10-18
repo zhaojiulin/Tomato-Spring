@@ -1,4 +1,4 @@
-package com.banana.test;
+package com.banana;
 
 import com.banana.spring.anno.Component;
 import com.banana.spring.handle.BeanPostProcessor;

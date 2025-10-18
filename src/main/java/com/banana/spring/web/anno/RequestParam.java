@@ -1,4 +1,4 @@
-package com.banana.spring.anno;
+package com.banana.spring.web.anno;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,13 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @Description: 基于包路径扫描class
+ * @Description: controller入参注解
  * @author zhaojiulin
- * @Date 2025/10/18 12:30
+ * @Date 2025/10/18 12:55
  * @version 1.0
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ComponentScan {
+public @interface RequestParam {
     String value();
 }

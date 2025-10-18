@@ -3,8 +3,13 @@ package com.banana.spring.web;
 import com.banana.spring.constant.RequestMethod;
 
 import java.lang.reflect.Method;
-import java.util.Map;
-
+import java.util.LinkedHashMap;
+/**
+ * @Description: 控制器-方法信息
+ * @author zhaojiulin
+ * @Date 2025/10/18 13:03
+ * @version 1.0
+ */
 public class HandlerMethod {
     private Object controller;     // 控制器实例
     private Method method;         // 处理方法
@@ -13,10 +18,10 @@ public class HandlerMethod {
     private boolean responseBody;  // 是否返回JSON
 
     // 参数信息：参数名 -> 参数类型
-    private Map<String, Class<?>> parameters;
+    private LinkedHashMap<String, Class<?>> parameters;
 
     public HandlerMethod(Object controller, Method method, String url,
-                         RequestMethod[] httpMethods, Map<String, Class<?>> parameters) {
+                         RequestMethod[] httpMethods, LinkedHashMap<String, Class<?>> parameters) {
         this.controller = controller;
         this.method = method;
         this.url = url;
@@ -64,11 +69,11 @@ public class HandlerMethod {
         this.responseBody = responseBody;
     }
 
-    public Map<String, Class<?>> getParameters() {
+    public LinkedHashMap<String, Class<?>> getParameters() {
         return parameters;
     }
 
-    public void setParameters(Map<String, Class<?>> parameters) {
+    public void setParameters(LinkedHashMap<String, Class<?>> parameters) {
         this.parameters = parameters;
     }
 }

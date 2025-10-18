@@ -1,4 +1,4 @@
-package com.banana.test.content;
+package com.banana.content;
 
 import com.banana.spring.anno.Component;
 

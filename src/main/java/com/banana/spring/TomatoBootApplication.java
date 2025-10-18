@@ -1,8 +1,12 @@
 package com.banana.spring;
 
-import com.banana.spring.web.EmbeddedServer;
 import com.banana.spring.web.servlet.TomcatEmbeddedServer;
-
+/**
+ * @Description: 容器启动
+ * @author zhaojiulin
+ * @Date 2025/10/18 14:25
+ * @version 1.0
+ */
 public class TomatoBootApplication {
     public static TomatoApplicationContext run(Class<?> primarySource, String... args) {
         // 创建上下文
@@ -16,8 +20,13 @@ public class TomatoBootApplication {
         return context;
     }
 
+    /**
+     * 启动服务器 暂时tomcat
+     * @param context 容器上下文
+     */
     private static void startTomcatServer(TomatoApplicationContext context) {
-
+        TomcatEmbeddedServer tomcatEmbeddedServer = new TomcatEmbeddedServer(context);
+        tomcatEmbeddedServer.start();
     }
 
 }

@@ -3,14 +3,18 @@ package com.banana.spring.core;
 import com.banana.spring.constant.BeanScopeType;
 
 /**
- * bean信息
- * @author banana
+ * @Description: bean的初始化信息
+ * class 类的字节码
+ * scope bean的作用域
+ * @author zhaojiulin
+ * @Date 2025/10/18 12:33
+ * @version 1.0
  */
 public class BeanDefinition {
     /**
      * bean类型
      */
-    private Class clazz;
+    private Class<?> clazz;
     /**
      * 作用域
      */
@@ -19,16 +23,16 @@ public class BeanDefinition {
     public BeanDefinition() {
     }
 
-    public BeanDefinition(Class clazz, BeanScopeType scope) {
+    public BeanDefinition(Class<?> clazz, BeanScopeType scope) {
         this.clazz = clazz;
         this.scope = scope;
     }
 
-    public Class getClazz() {
+    public Class<?> getClazz() {
         return clazz;
     }
 
-    public void setClazz(Class clazz) {
+    public void setClazz(Class<?> clazz) {
         this.clazz = clazz;
     }
 

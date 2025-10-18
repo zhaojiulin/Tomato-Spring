@@ -1,11 +1,11 @@
 package com.banana.spring.web;
 
-import jakarta.servlet.http.HttpServletRequest;
+/**
+ * @author Administrator
+ * @version 1.0
+ * @description:
+ * @date 2025/10/17 21:43
+ */
+public class HandlerMapping {
 
-import java.util.Map;
-
-public interface HandlerMapping {
-    HandlerMethod getHandler(HttpServletRequest request);
-    void registerHandler(String url, HandlerMethod handlerMethod);
-    Map<String, HandlerMethod> getHandlerMap();
 }

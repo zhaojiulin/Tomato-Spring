@@ -4,18 +4,23 @@ import com.banana.spring.anno.Autowired;
 import com.banana.spring.anno.Component;
 import com.banana.spring.anno.Scope;
 import com.banana.spring.constant.BeanScopeType;
+import com.banana.spring.constant.RequestMethod;
 import com.banana.spring.core.BeanDefinition;
 import com.banana.spring.core.ClassPathScanner;
 import com.banana.spring.handle.ApplicationContextAware;
 import com.banana.spring.handle.BeanNameAware;
 import com.banana.spring.handle.BeanPostProcessor;
 import com.banana.spring.handle.InitializingBean;
+import com.banana.spring.web.HandlerMethod;
+import com.banana.spring.web.anno.RequestParam;
+import com.banana.spring.web.anno.WebController;
+import com.banana.spring.web.anno.WebRequestMapping;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -24,6 +29,8 @@ public class TomatoApplicationContext {
      * 单例池
      */
     private final ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<String, HandlerMethod> controllerClassMap = new ConcurrentHashMap<>();
     /**
      * BeanDefinition定义
      */
@@ -44,8 +51,10 @@ public class TomatoApplicationContext {
         ClassPathScanner classPathScanner = new ClassPathScanner();
         Set<Class<?>> classSet = classPathScanner.scan(componentScan.scanBasePackage().isEmpty() ? primarySource.getPackage().getName() : componentScan.scanBasePackage());
         for (Class<?> clazz : classSet) {
+            // 创建beanDefinition
             registerBeanDefinition(clazz);
         }
+        // 注册前置后置方法
         registerInternalPostProcessors();
     }
 
@@ -58,25 +67,29 @@ public class TomatoApplicationContext {
         if (clazz.isAnnotation() || clazz.isInterface()) {
             return;
         }
+        if (!clazz.isAnnotationPresent(Component.class) && !clazz.isAnnotationPresent(WebController.class)) {
+            return;
+        }
+        String beanName = "";
         // 是否有标记这个类是bean
         if (clazz.isAnnotationPresent(Component.class)) {
-            // 解析类，判断当前bean是单例bean，还是原型bean;创建bean信息BeanDefinition
             Component componentAnno = clazz.getDeclaredAnnotation(Component.class);
             // beanName获取
-            String beanName = componentAnno.value();
-            if (beanName.isEmpty()) {
-                beanName = clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1);
-            }
-            BeanDefinition beanDefinition = new BeanDefinition();
-            beanDefinition.setClazz(clazz);
-            if (clazz.isAnnotationPresent(Scope.class)) {
-                Scope scopeAnno = clazz.getDeclaredAnnotation(Scope.class);
-                beanDefinition.setScope(scopeAnno.value());
-            } else {
-                beanDefinition.setScope(BeanScopeType.SINGLETON);
-            }
-            beanDefinitionMap.put(beanName, beanDefinition);
+            beanName = componentAnno.value();
         }
+        if (beanName.isEmpty()) {
+            beanName = clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1);
+        }
+        // 解析类，判断当前bean是单例bean，还是原型bean;创建bean信息BeanDefinition
+        BeanDefinition beanDefinition = new BeanDefinition();
+        beanDefinition.setClazz(clazz);
+        if (clazz.isAnnotationPresent(Scope.class)) {
+            Scope scopeAnno = clazz.getDeclaredAnnotation(Scope.class);
+            beanDefinition.setScope(scopeAnno.value());
+        } else {
+            beanDefinition.setScope(BeanScopeType.SINGLETON);
+        }
+        beanDefinitionMap.put(beanName, beanDefinition);
     }
 
     /**
@@ -86,19 +99,14 @@ public class TomatoApplicationContext {
      */
     public void registerInternalPostProcessors() {
         beanDefinitionMap.forEach((key, value) -> {
-            Class clazz = value.getClazz();
+            Class<?> clazz = value.getClazz();
             // 判断是否实现自BeanPostProcessor
             if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
                 BeanPostProcessor newInstance = null;
                 try {
                     newInstance = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
-                } catch (InstantiationException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                } catch (InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchMethodException e) {
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                         NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
                 beanPostProcessors.add(newInstance);
@@ -108,14 +116,52 @@ public class TomatoApplicationContext {
     }
 
     /**
-     * 根据bean实例化class
+     * 根据bean实例化class、属性注入、依赖注入、web映射
      */
     public void refreshBean() {
         beanDefinitionMap.forEach((beanName, beanDefinition) -> {
             Object bean = createBean(beanName, beanDefinition);
             singletonObjects.put(beanName, bean);
+            processController(beanDefinition.getClazz(), bean);
         });
     }
+
+    /**
+     * 注册请求地址与方法映射
+     *
+     * @param controllerClass
+     * @param newInstance
+     */
+    private void processController(Class<?> controllerClass, Object newInstance) {
+        if (!controllerClass.isAnnotationPresent(WebController.class)) {
+            return;
+        }
+        WebController webControllerAnnotation =
+                controllerClass.getAnnotation(WebController.class);
+        String basePath = webControllerAnnotation.value();
+        for (Method method : controllerClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(WebRequestMapping.class)) {
+                WebRequestMapping mappingAnnotation =
+                        method.getAnnotation(WebRequestMapping.class);
+                String path = basePath + mappingAnnotation.value();
+                RequestMethod requestMethod = mappingAnnotation.method();
+                String key = requestMethod.name() + ":" + path;
+                Parameter[] parameters = method.getParameters();
+                LinkedHashMap<String, Class<?>> params = new LinkedHashMap<>();
+                for (int i = 0; i < parameters.length; i++) {
+                    Parameter parameter = parameters[i];
+                    if (parameter.isAnnotationPresent(RequestParam.class)) {
+                        RequestParam annotation = parameter.getAnnotation(RequestParam.class);
+                        params.put(annotation.value(), parameter.getType());
+                    }
+                }
+                HandlerMethod handlerMethod = new HandlerMethod(newInstance, method, path, new RequestMethod[]{requestMethod}, params);
+                controllerClassMap.put(key, handlerMethod);
+                System.out.println("Mapped: " + key + " -> " + method.getName());
+            }
+        }
+    }
+
 
     /**
      * 创建bean
@@ -132,7 +178,7 @@ public class TomatoApplicationContext {
      */
     @SuppressWarnings("unchecked")
     private Object createBean(String beanName, BeanDefinition beanDefinition) {
-        Class clazz = beanDefinition.getClazz();
+        Class<?> clazz = beanDefinition.getClazz();
         try {
             Object instance = clazz.getDeclaredConstructor().newInstance();
             // 依赖注入
@@ -146,26 +192,9 @@ public class TomatoApplicationContext {
                     declaredField.setAccessible(true);
                     declaredField.set(instance, bean);
                 }
-
-                if (instance instanceof BeanNameAware) {
-                    ((BeanNameAware) instance).setBeanName(beanName);
-                }
-                if (instance instanceof ApplicationContextAware) {
-                    ((ApplicationContextAware) instance).setApplicationContext(this);
-                }
-                // BeanPostProcessor 扩展机制
-                for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
-                    instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
-                }
-                // 初始化
-                if (instance instanceof InitializingBean) {
-                    ((InitializingBean) instance).afterPropertiesSet();
-                }
-                // BeanPostProcessor 扩展机制
-                for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
-                    instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
-                }
             }
+            // 执行实现Aware接口和BeanPostProcessor接口方法
+            instance = doAwareAndPost(beanName, instance, clazz);
             return instance;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
@@ -178,12 +207,52 @@ public class TomatoApplicationContext {
         }
     }
 
+    /**
+     * Aware接口和BeanPostProcessor接口子类实现
+     * @param beanName
+     * @param instance
+     * @param clazz
+     * @return
+     */
+    private Object doAwareAndPost(String beanName, Object instance, Class<?> clazz) {
+        if (instance instanceof BeanNameAware) {
+            ((BeanNameAware) instance).setBeanName(beanName);
+        }
+        if (instance instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) instance).setApplicationContext(this);
+        }
+        boolean assignableFromPostProcessor = BeanPostProcessor.class.isAssignableFrom(clazz);
+        // BeanPostProcessor 扩展机制 前置
+        if (assignableFromPostProcessor) {
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+        }
+        // 自定义初始化
+        if (instance instanceof InitializingBean) {
+            ((InitializingBean) instance).afterPropertiesSet();
+        }
+        // BeanPostProcessor 扩展机制 后置
+        if (assignableFromPostProcessor) {
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
+        }
+        return instance;
+    }
+
+    /**
+     * 获取完整的bean
+     * @param beanName
+     * @return
+     */
     public Object getBean(String beanName) {
         if (beanDefinitionMap.containsKey(beanName)) {
             BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
             // 单例bean从单例池获取
             if (beanDefinition.getScope().equals(BeanScopeType.SINGLETON)) {
-                return singletonObjects.get(beanName);
+                Object o = singletonObjects.get(beanName);
+                return Objects.isNull(o) ? createBean(beanName, beanDefinition) : o;
             } else {
                 // 原型模式
                 return createBean(beanName, beanDefinition);
@@ -191,5 +260,16 @@ public class TomatoApplicationContext {
         } else {
             throw new NullPointerException();
         }
+    }
+
+    /**
+     * 获取请求映射信息
+     *
+     * @param method
+     * @param uri
+     * @return
+     */
+    public HandlerMethod getHandlerMethod(String method, String uri) {
+        return controllerClassMap.get(String.format("%s:%s", method, uri));
     }
 }
