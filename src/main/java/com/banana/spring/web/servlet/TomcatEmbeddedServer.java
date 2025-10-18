@@ -2,6 +2,7 @@ package com.banana.spring.web.servlet;
 
 import com.banana.spring.TomatoApplicationContext;
 import com.banana.spring.anno.Component;
+import com.banana.spring.singleton.ConfigurationManager;
 import com.banana.spring.web.EmbeddedServer;
 import org.apache.catalina.Context;
 import org.apache.catalina.Wrapper;
@@ -10,27 +11,26 @@ import org.apache.catalina.startup.Tomcat;
 
 import java.io.File;
 import java.io.IOException;
+
 /**
- * @Description: 内嵌tomcat
  * @author zhaojiulin
- * @Date 2025/10/18 13:00
  * @version 1.0
+ * @Description: 内嵌tomcat
+ * @Date 2025/10/18 13:00
  */
 @Component
 public class TomcatEmbeddedServer implements EmbeddedServer {
-    private TomatoApplicationContext tomatoApplicationContext;
+    private final TomatoApplicationContext tomatoApplicationContext;
+    private final int port;
     public TomcatEmbeddedServer(TomatoApplicationContext applicationContext) {
         tomatoApplicationContext = applicationContext;
+        port = Integer.parseInt(ConfigurationManager.getInstance().getProperty("serve.port"));
     }
-
-    private Tomcat tomcat;
-    private int port = 7860;
 
     @Override
     public void start() {
         try {
-            tomcat = new Tomcat();
-
+            Tomcat tomcat = new Tomcat();
             // 设置端口（避免冲突可以使用8081）
             tomcat.setPort(port);
 
@@ -50,7 +50,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             dispatcher.setLoadOnStartup(1);
 
             tomcat.start();
-            System.out.println("MiniBoot application started on port: " + port);
+            System.out.println("MiniBoot application started on port: " + this.port);
 
             tomcat.getServer().await();
 
@@ -58,6 +58,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             throw new RuntimeException("Failed to start embedded Tomcat", e);
         }
     }
+
     private static File createTempDir() {
         try {
             File tempDir = File.createTempFile("tomcat.", ".dir");
