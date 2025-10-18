@@ -23,6 +23,7 @@ public class ConfigurationManager {
         properties = new Properties();
         try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("application.properties")) {
             if (resourceAsStream != null) {
+                // 加载
                 properties.load(resourceAsStream);
             }
         } catch (IOException e) {
