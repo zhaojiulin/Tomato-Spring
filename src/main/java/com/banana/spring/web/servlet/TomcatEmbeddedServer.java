@@ -58,17 +58,6 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             throw new RuntimeException("Failed to start embedded Tomcat", e);
         }
     }
-
-    @Override
-    public void stop() {
-
-    }
-
-    @Override
-    public int getPort() {
-        return 0;
-    }
-
     private static File createTempDir() {
         try {
             File tempDir = File.createTempFile("tomcat.", ".dir");
