@@ -1,4 +1,4 @@
-package com.banana.spring.web;
+package com.banana.spring.web.serve;
 
 /**
  * @Description: web服务接口类

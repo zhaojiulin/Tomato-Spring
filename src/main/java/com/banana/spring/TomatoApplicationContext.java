@@ -11,7 +11,8 @@ import com.banana.spring.handle.ApplicationContextAware;
 import com.banana.spring.handle.BeanNameAware;
 import com.banana.spring.handle.BeanPostProcessor;
 import com.banana.spring.handle.InitializingBean;
-import com.banana.spring.web.HandlerMethod;
+import com.banana.spring.core.CircularDependencyCheck;
+import com.banana.spring.web.mapping.HandlerMethod;
 import com.banana.spring.web.anno.RequestParam;
 import com.banana.spring.web.anno.WebController;
 import com.banana.spring.web.anno.WebRequestMapping;
@@ -30,7 +31,7 @@ public class TomatoApplicationContext {
      */
     private final ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
 
-    private final ConcurrentHashMap<String, HandlerMethod> controllerClassMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, HandlerMethod> handleMapping = new ConcurrentHashMap<>();
     /**
      * BeanDefinition定义
      */
@@ -39,6 +40,9 @@ public class TomatoApplicationContext {
      * 实例化BeanPostProcessor
      */
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
+    private final CircularDependencyCheck circularDependencyCheck = new CircularDependencyCheck();
+
 
     /**
      * 扫描bean
@@ -98,21 +102,13 @@ public class TomatoApplicationContext {
      * @param
      */
     public void registerInternalPostProcessors() {
-        beanDefinitionMap.forEach((key, value) -> {
-            Class<?> clazz = value.getClazz();
-            // 判断是否实现自BeanPostProcessor
-            if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
-                BeanPostProcessor newInstance = null;
-                try {
-                    newInstance = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                         NoSuchMethodException e) {
-                    throw new RuntimeException(e);
-                }
-                beanPostProcessors.add(newInstance);
-            }
-        });
-
+        List<BeanDefinition> processorBeanDefinition = beanDefinitionMap.values().stream()
+                .filter(beanDefinition -> BeanPostProcessor.class.isAssignableFrom(beanDefinition.getClazz()))
+                .toList();
+        for (BeanDefinition beanDefinition : processorBeanDefinition) {
+            Object bean = createBean(beanDefinition.getClazz().getName(), beanDefinition);
+            beanPostProcessors.add((BeanPostProcessor) bean);
+        }
     }
 
     /**
@@ -156,12 +152,28 @@ public class TomatoApplicationContext {
                     }
                 }
                 HandlerMethod handlerMethod = new HandlerMethod(newInstance, method, path, new RequestMethod[]{requestMethod}, params);
-                controllerClassMap.put(key, handlerMethod);
+                handleMapping.put(key, handlerMethod);
                 System.out.println("Mapped: " + key + " -> " + method.getName());
             }
         }
     }
 
+
+    /**
+     * 循环依赖检查
+     * bean实例化
+     * 循环依赖结束
+     * @param beanName
+     * @param beanDefinition
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Object createBean(String beanName, BeanDefinition beanDefinition) {
+        circularDependencyCheck.startCreation(beanName);
+        Object bean = doCreateBean(beanName, beanDefinition);
+        circularDependencyCheck.endCreation(beanName);
+        return bean;
+    }
 
     /**
      * 创建bean
@@ -171,15 +183,11 @@ public class TomatoApplicationContext {
      * 执行Bean初始化之前自定义处理
      * 初始化Bean
      * 执行Bean初始化之后自定义处理
-     *
-     * @param beanName
-     * @param beanDefinition
-     * @return
      */
-    @SuppressWarnings("unchecked")
-    private Object createBean(String beanName, BeanDefinition beanDefinition) {
+    private Object doCreateBean(String beanName, BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
         try {
+            beanDefinition.setCreating(true);
             Object instance = clazz.getDeclaredConstructor().newInstance();
             // 依赖注入
             for (Field declaredField : clazz.getDeclaredFields()) {
@@ -209,6 +217,7 @@ public class TomatoApplicationContext {
 
     /**
      * Aware接口和BeanPostProcessor接口子类实现
+     *
      * @param beanName
      * @param instance
      * @param clazz
@@ -243,6 +252,7 @@ public class TomatoApplicationContext {
 
     /**
      * 获取完整的bean
+     *
      * @param beanName
      * @return
      */
@@ -270,6 +280,6 @@ public class TomatoApplicationContext {
      * @return
      */
     public HandlerMethod getHandlerMethod(String method, String uri) {
-        return controllerClassMap.get(String.format("%s:%s", method, uri));
+        return handleMapping.get(String.format("%s:%s", method, uri));
     }
 }

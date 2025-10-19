@@ -1,4 +1,4 @@
-package com.banana.spring.web;
+package com.banana.spring.web.mapping;
 
 import com.banana.spring.constant.RequestMethod;
 

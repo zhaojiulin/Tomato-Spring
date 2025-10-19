@@ -1,4 +1,4 @@
-package com.banana.spring.web;
+package com.banana.spring.web.mapping;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

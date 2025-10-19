@@ -20,6 +20,8 @@ public class BeanDefinition {
      */
     private BeanScopeType scope;
 
+    private boolean isCreating;
+
     public BeanDefinition() {
     }
 
@@ -42,5 +44,13 @@ public class BeanDefinition {
 
     public void setScope(BeanScopeType scope) {
         this.scope = scope;
+    }
+
+    public boolean isCreating() {
+        return isCreating;
+    }
+
+    public void setCreating(boolean creating) {
+        isCreating = creating;
     }
 }

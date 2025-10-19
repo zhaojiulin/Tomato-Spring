@@ -1,9 +1,9 @@
-package com.banana.spring.web.servlet;
+package com.banana.spring.web.serve;
 
 import com.banana.spring.TomatoApplicationContext;
 import com.banana.spring.anno.Component;
 import com.banana.spring.singleton.ConfigurationManager;
-import com.banana.spring.web.EmbeddedServer;
+import com.banana.spring.web.servlet.DispatcherServlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
@@ -21,12 +21,14 @@ import java.io.IOException;
 @Component
 public class TomcatEmbeddedServer implements EmbeddedServer {
     private final TomatoApplicationContext tomatoApplicationContext;
-    private final int port;
+    private int port = 8080;
     public TomcatEmbeddedServer(TomatoApplicationContext applicationContext) {
         tomatoApplicationContext = applicationContext;
-        port = Integer.parseInt(ConfigurationManager.getInstance().getProperty("serve.port"));
+        String servePort = ConfigurationManager.getInstance().getProperty("serve.port");
+        if (servePort != null) {
+            port = Integer.parseInt(servePort);
+        }
     }
-
     @Override
     public void start() {
         try {
@@ -52,7 +54,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             tomcat.start();
             System.out.println("MiniBoot application started on port: " + this.port);
 
-            tomcat.getServer().await();
+            //tomcat.getServer().await();
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to start embedded Tomcat", e);
