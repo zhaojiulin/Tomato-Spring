@@ -1,6 +1,6 @@
 package com.banana.content;
 
-import com.banana.spring.anno.Component;
+import com.tomato.sprout.anno.Component;
 
 @Component
 public class ContentService {

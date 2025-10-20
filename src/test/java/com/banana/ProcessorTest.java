@@ -1,7 +1,7 @@
 package com.banana;
 
-import com.banana.spring.anno.Component;
-import com.banana.spring.handle.BeanPostProcessor;
+import com.tomato.sprout.anno.Component;
+import com.tomato.sprout.handle.BeanPostProcessor;
 
 import java.util.Locale;
 

@@ -1,7 +1,7 @@
 package com.banana;
 
-import com.banana.spring.anno.Autowired;
-import com.banana.spring.anno.Component;
+import com.tomato.sprout.anno.Autowired;
+import com.tomato.sprout.anno.Component;
 
 @Component("userService")
 public class UserService {
