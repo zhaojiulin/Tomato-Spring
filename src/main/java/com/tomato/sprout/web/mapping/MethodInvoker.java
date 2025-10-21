@@ -1,5 +1,7 @@
 package com.tomato.sprout.web.mapping;
 
+import com.google.gson.Gson;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -31,6 +33,7 @@ public class MethodInvoker {
 
     /**
      * 解析方法与入参
+     *
      * @param params
      * @param parameters
      * @return
@@ -45,14 +48,8 @@ public class MethodInvoker {
     }
 
     /**
-     * 获取参数名称
-     */
-    private String getParameterName(int paramIndex) {
-        return "arg" + paramIndex;
-    }
-
-    /**
      * 字段值类型转换
+     *
      * @param value
      * @param targetType
      * @return
@@ -75,8 +72,9 @@ public class MethodInvoker {
             return Long.parseLong(value.toString());
         } else if (targetType == Boolean.class || targetType == boolean.class) {
             return Boolean.parseBoolean(value.toString());
+        } else if (!targetType.isPrimitive()) {
+            return new Gson().fromJson(value.toString(), targetType);
         }
-
         return value;
     }
 }

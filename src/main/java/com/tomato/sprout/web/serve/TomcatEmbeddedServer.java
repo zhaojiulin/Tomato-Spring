@@ -22,7 +22,10 @@ import java.io.IOException;
 public class TomcatEmbeddedServer implements EmbeddedServer {
     private TomatoApplicationContext tomatoApplicationContext;
     private int port = 8080;
-    public TomcatEmbeddedServer() {}
+
+    public TomcatEmbeddedServer() {
+    }
+
     public TomcatEmbeddedServer(TomatoApplicationContext applicationContext) {
         tomatoApplicationContext = applicationContext;
         String servePort = ConfigurationManager.getInstance().getProperty("serve.port");
@@ -30,6 +33,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             port = Integer.parseInt(servePort);
         }
     }
+
     @Override
     public void start() {
         try {
@@ -47,7 +51,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
 
             // 3. 创建上下文并添加映射Servlet
             Context ctx = tomcat.addContext("", null);
-            Wrapper dispatcher = Tomcat.addServlet(ctx, "dispatcher", new DispatcherServlet(tomatoApplicationContext));
+            Wrapper dispatcher = Tomcat.addServlet(ctx, "dispatcher", new DispatcherServlet());
             // 映射所有请求到这个Servlet
             dispatcher.addMapping("/*");
             dispatcher.setLoadOnStartup(1);

@@ -2,6 +2,7 @@ package com.banana.content;
 
 import com.tomato.sprout.anno.Autowired;
 import com.tomato.sprout.constant.RequestMethod;
+import com.tomato.sprout.web.anno.RequestBody;
 import com.tomato.sprout.web.anno.WebController;
 import com.tomato.sprout.web.anno.RequestParam;
 import com.tomato.sprout.web.anno.WebRequestMapping;
@@ -21,8 +22,8 @@ public class ContentController {
     @Autowired
     private UserService userService;
     @WebRequestMapping(value = "/info", method = RequestMethod.POST)
-    public void index(@RequestParam("title") String title) {
-        logger.info("index：" + title);
+    public void index(@RequestBody UserEntity user) {
+        logger.info("index：" + user.getTitle());
     }
 
     @WebRequestMapping(value = "/hello", method = RequestMethod.POST)

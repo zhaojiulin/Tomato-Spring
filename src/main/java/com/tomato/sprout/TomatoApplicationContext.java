@@ -12,6 +12,7 @@ import com.tomato.sprout.handle.ApplicationContextAware;
 import com.tomato.sprout.handle.BeanNameAware;
 import com.tomato.sprout.handle.BeanPostProcessor;
 import com.tomato.sprout.handle.InitializingBean;
+import com.tomato.sprout.web.mapping.HandleMethodMappingHolder;
 import com.tomato.sprout.web.mapping.HandlerMethod;
 import com.tomato.sprout.web.anno.RequestParam;
 import com.tomato.sprout.web.anno.WebController;
@@ -31,10 +32,6 @@ public class TomatoApplicationContext {
      */
     private final ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
     /**
-     * web请求与控制器映射信息
-     */
-    private final ConcurrentHashMap<String, HandlerMethod> handleMapping = new ConcurrentHashMap<>();
-    /**
      * BeanDefinition定义
      */
     private final ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
@@ -46,7 +43,17 @@ public class TomatoApplicationContext {
      * 循环依赖检查类-禁止依赖循环
      */
     private final CircularDependencyCheck circularDependencyCheck = new CircularDependencyCheck();
-
+    private static volatile TomatoApplicationContext instance;
+    public TomatoApplicationContext instance() {
+        if(instance == null) {
+            synchronized (TomatoApplicationContext.class) {
+                if(instance == null) {
+                    instance = new TomatoApplicationContext();
+                }
+            }
+        }
+        return instance;
+    }
 
     /**
      * 扫描bean
@@ -127,46 +134,9 @@ public class TomatoApplicationContext {
         beanDefinitionMap.forEach((beanName, beanDefinition) -> {
             Object bean = createBean(beanName, beanDefinition);
             singletonObjects.put(beanName, bean);
-            processController(beanDefinition.getClazz(), bean);
+            HandleMethodMappingHolder.getInstance().processController(beanDefinition.getClazz(), bean);
         });
     }
-
-    /**
-     * 注册请求地址与方法映射
-     *
-     * @param controllerClass
-     * @param newInstance
-     */
-    private void processController(Class<?> controllerClass, Object newInstance) {
-        if (!controllerClass.isAnnotationPresent(WebController.class)) {
-            return;
-        }
-        WebController webControllerAnnotation =
-                controllerClass.getAnnotation(WebController.class);
-        String basePath = webControllerAnnotation.value();
-        for (Method method : controllerClass.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(WebRequestMapping.class)) {
-                WebRequestMapping mappingAnnotation =
-                        method.getAnnotation(WebRequestMapping.class);
-                String path = basePath + mappingAnnotation.value();
-                RequestMethod requestMethod = mappingAnnotation.method();
-                String key = requestMethod.name() + ":" + path;
-                Parameter[] parameters = method.getParameters();
-                LinkedHashMap<String, Class<?>> params = new LinkedHashMap<>();
-                for (int i = 0; i < parameters.length; i++) {
-                    Parameter parameter = parameters[i];
-                    if (parameter.isAnnotationPresent(RequestParam.class)) {
-                        RequestParam annotation = parameter.getAnnotation(RequestParam.class);
-                        params.put(annotation.value(), parameter.getType());
-                    }
-                }
-                HandlerMethod handlerMethod = new HandlerMethod(newInstance, method, path, new RequestMethod[]{requestMethod}, params);
-                handleMapping.put(key, handlerMethod);
-                System.out.println("Mapped: " + key + " -> " + method.getName());
-            }
-        }
-    }
-
 
     /**
      * 循环依赖检查
@@ -279,16 +249,5 @@ public class TomatoApplicationContext {
         } else {
             throw new NullPointerException();
         }
-    }
-
-    /**
-     * 获取请求映射信息
-     *
-     * @param method
-     * @param uri
-     * @return
-     */
-    public HandlerMethod getHandlerMethod(String method, String uri) {
-        return handleMapping.get(String.format("%s:%s", method, uri));
     }
 }
