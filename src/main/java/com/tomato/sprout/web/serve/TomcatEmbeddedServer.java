@@ -20,8 +20,9 @@ import java.io.IOException;
  */
 @Component
 public class TomcatEmbeddedServer implements EmbeddedServer {
-    private final TomatoApplicationContext tomatoApplicationContext;
+    private TomatoApplicationContext tomatoApplicationContext;
     private int port = 8080;
+    public TomcatEmbeddedServer() {}
     public TomcatEmbeddedServer(TomatoApplicationContext applicationContext) {
         tomatoApplicationContext = applicationContext;
         String servePort = ConfigurationManager.getInstance().getProperty("serve.port");

@@ -6,12 +6,12 @@ import com.tomato.sprout.anno.Scope;
 import com.tomato.sprout.constant.BeanScopeType;
 import com.tomato.sprout.constant.RequestMethod;
 import com.tomato.sprout.core.BeanDefinition;
+import com.tomato.sprout.core.CircularDependencyCheck;
 import com.tomato.sprout.core.ClassPathScanner;
 import com.tomato.sprout.handle.ApplicationContextAware;
 import com.tomato.sprout.handle.BeanNameAware;
 import com.tomato.sprout.handle.BeanPostProcessor;
 import com.tomato.sprout.handle.InitializingBean;
-import com.tomato.sprout.core.CircularDependencyCheck;
 import com.tomato.sprout.web.mapping.HandlerMethod;
 import com.tomato.sprout.web.anno.RequestParam;
 import com.tomato.sprout.web.anno.WebController;
@@ -30,7 +30,9 @@ public class TomatoApplicationContext {
      * 单例池
      */
     private final ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
-
+    /**
+     * web请求与控制器映射信息
+     */
     private final ConcurrentHashMap<String, HandlerMethod> handleMapping = new ConcurrentHashMap<>();
     /**
      * BeanDefinition定义
@@ -40,7 +42,9 @@ public class TomatoApplicationContext {
      * 实例化BeanPostProcessor
      */
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
-
+    /**
+     * 循环依赖检查类-禁止依赖循环
+     */
     private final CircularDependencyCheck circularDependencyCheck = new CircularDependencyCheck();
 
 
@@ -53,7 +57,12 @@ public class TomatoApplicationContext {
         TomatoBoot componentScan = primarySource.getDeclaredAnnotation(TomatoBoot.class);
         // 扫描路径
         ClassPathScanner classPathScanner = new ClassPathScanner();
-        Set<Class<?>> classSet = classPathScanner.scan(componentScan.scanBasePackage().isEmpty() ? primarySource.getPackage().getName() : componentScan.scanBasePackage());
+        String applicationPath = componentScan.scanBasePackage().isEmpty() ? primarySource.getPackage().getName() : componentScan.scanBasePackage();
+        String[] packages = new String[]{applicationPath, TomatoApplicationContext.class.getPackage().getName()};
+        Set<Class<?>> classSet = new HashSet<>();
+        for (String path : packages) {
+            classSet.addAll(classPathScanner.scan(path));
+        }
         for (Class<?> clazz : classSet) {
             // 创建beanDefinition
             registerBeanDefinition(clazz);

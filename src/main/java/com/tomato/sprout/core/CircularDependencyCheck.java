@@ -39,6 +39,7 @@ public class CircularDependencyCheck {
 
     /**
      * 创建后清除
+     * ThreadLocal 值强引用必须清除
      * @param beanName
      */
     public void endCreation(String beanName) {

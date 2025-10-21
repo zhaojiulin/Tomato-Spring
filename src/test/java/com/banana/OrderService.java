@@ -1,5 +1,6 @@
 package com.banana;
 
+import com.tomato.sprout.anno.Autowired;
 import com.tomato.sprout.anno.Component;
 
 @Component
