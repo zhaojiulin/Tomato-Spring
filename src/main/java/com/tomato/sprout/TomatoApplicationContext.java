@@ -166,7 +166,6 @@ public class TomatoApplicationContext {
     private Object doCreateBean(String beanName, BeanDefinition beanDefinition) {
         Class<?> clazz = beanDefinition.getClazz();
         try {
-            beanDefinition.setCreating(true);
             Object instance = clazz.getDeclaredConstructor().newInstance();
             // 依赖注入
             for (Field declaredField : clazz.getDeclaredFields()) {

@@ -28,6 +28,7 @@ public class PostMappingHandle extends AbstractHandleMapping {
 
             String jsonBody = jsonBuilder.toString();
             System.out.println("原始JSON: " + jsonBody);
+            // 暂支持单个
             paramMap.put("arg0", jsonBody);
             return paramMap;
         } catch (IOException e) {

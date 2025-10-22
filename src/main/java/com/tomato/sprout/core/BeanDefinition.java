@@ -3,12 +3,12 @@ package com.tomato.sprout.core;
 import com.tomato.sprout.constant.BeanScopeType;
 
 /**
+ * @author zhaojiulin
+ * @version 1.0
  * @Description: bean的初始化信息
  * class 类的字节码
  * scope bean的作用域
- * @author zhaojiulin
  * @Date 2025/10/18 12:33
- * @version 1.0
  */
 public class BeanDefinition {
     /**
@@ -19,8 +19,6 @@ public class BeanDefinition {
      * 作用域
      */
     private BeanScopeType scope;
-
-    private boolean isCreating;
 
     public BeanDefinition() {
     }
@@ -44,13 +42,5 @@ public class BeanDefinition {
 
     public void setScope(BeanScopeType scope) {
         this.scope = scope;
-    }
-
-    public boolean isCreating() {
-        return isCreating;
-    }
-
-    public void setCreating(boolean creating) {
-        isCreating = creating;
     }
 }
