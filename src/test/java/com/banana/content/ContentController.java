@@ -17,13 +17,15 @@ import java.util.logging.Logger;
  * @version 1.0
  */
 @WebController
+@WebRequestMapping("/web")
 public class ContentController {
     static final Logger logger = Logger.getLogger(ContentController.class.getName());
     @Autowired
     private UserService userService;
     @WebRequestMapping(value = "/info", method = RequestMethod.POST)
-    public void index(@RequestBody UserEntity user) {
+    public Object index(@RequestBody UserEntity user) {
         logger.info("index：" + user.getTitle());
+        return user;
     }
 
     @WebRequestMapping(value = "/hello", method = RequestMethod.POST)

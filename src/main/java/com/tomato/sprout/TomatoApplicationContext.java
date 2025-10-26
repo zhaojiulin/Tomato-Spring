@@ -4,7 +4,6 @@ import com.tomato.sprout.anno.Autowired;
 import com.tomato.sprout.anno.Component;
 import com.tomato.sprout.anno.Scope;
 import com.tomato.sprout.constant.BeanScopeType;
-import com.tomato.sprout.constant.RequestMethod;
 import com.tomato.sprout.core.BeanDefinition;
 import com.tomato.sprout.core.CircularDependencyCheck;
 import com.tomato.sprout.core.ClassPathScanner;
@@ -12,16 +11,11 @@ import com.tomato.sprout.handle.ApplicationContextAware;
 import com.tomato.sprout.handle.BeanNameAware;
 import com.tomato.sprout.handle.BeanPostProcessor;
 import com.tomato.sprout.handle.InitializingBean;
-import com.tomato.sprout.web.mapping.HandleMethodMappingHolder;
-import com.tomato.sprout.web.mapping.HandlerMethod;
-import com.tomato.sprout.web.anno.RequestParam;
 import com.tomato.sprout.web.anno.WebController;
-import com.tomato.sprout.web.anno.WebRequestMapping;
+import com.tomato.sprout.web.mapping.HandleMethodMappingHolder;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,17 +37,6 @@ public class TomatoApplicationContext {
      * 循环依赖检查类-禁止依赖循环
      */
     private final CircularDependencyCheck circularDependencyCheck = new CircularDependencyCheck();
-    private static volatile TomatoApplicationContext instance;
-    public TomatoApplicationContext instance() {
-        if(instance == null) {
-            synchronized (TomatoApplicationContext.class) {
-                if(instance == null) {
-                    instance = new TomatoApplicationContext();
-                }
-            }
-        }
-        return instance;
-    }
 
     /**
      * 扫描bean
@@ -65,7 +48,7 @@ public class TomatoApplicationContext {
         // 扫描路径
         ClassPathScanner classPathScanner = new ClassPathScanner();
         String applicationPath = componentScan.scanBasePackage().isEmpty() ? primarySource.getPackage().getName() : componentScan.scanBasePackage();
-        String[] packages = new String[]{applicationPath, TomatoApplicationContext.class.getPackage().getName()};
+        String[] packages = new String[]{applicationPath};
         Set<Class<?>> classSet = new HashSet<>();
         for (String path : packages) {
             classSet.addAll(classPathScanner.scan(path));

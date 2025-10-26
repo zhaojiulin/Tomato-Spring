@@ -8,7 +8,16 @@ import com.tomato.sprout.web.serve.TomcatEmbeddedServer;
  * @version 1.0
  */
 public class TomatoBootApplication {
-    public static TomatoApplicationContext run(Class<?> primarySource, String... args) {
+
+    public static void start(Class<?> primarySource, String[] args) {
+        new TomatoBootApplication().run(primarySource, args);
+    }
+
+    public static TomatoApplicationContext startContext(Class<?> primarySource, String[] args) {
+        return new TomatoBootApplication().run(primarySource, args);
+    }
+
+    private TomatoApplicationContext run(Class<?> primarySource, String[] args) {
         // 创建上下文
         TomatoApplicationContext context = new TomatoApplicationContext();
         // 扫描并注册bean

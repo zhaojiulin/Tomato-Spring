@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -63,7 +65,14 @@ public class MethodInvoker {
             return value;
         }
 
-        // 简单的类型转换
+        if (!targetType.isPrimitive()) {
+            return new Gson().fromJson(value.toString(), targetType);
+        }
+
+        return convertBasicValue(value, targetType);
+    }
+
+    private Object convertBasicValue(Object value, Class<?> targetType) {
         if (targetType == String.class) {
             return value.toString();
         } else if (targetType == Integer.class || targetType == int.class) {
@@ -72,8 +81,12 @@ public class MethodInvoker {
             return Long.parseLong(value.toString());
         } else if (targetType == Boolean.class || targetType == boolean.class) {
             return Boolean.parseBoolean(value.toString());
-        } else if (!targetType.isPrimitive()) {
-            return new Gson().fromJson(value.toString(), targetType);
+        } else if (targetType == Double.class || targetType == double.class) {
+            return Double.parseDouble(value.toString());
+        } else if (targetType == Float.class || targetType == float.class) {
+            return Float.parseFloat(value.toString());
+        } else if (targetType == Date.class) {
+            return LocalDateTime.parse(value.toString());
         }
         return value;
     }

@@ -9,12 +9,13 @@ import com.tomato.sprout.web.anno.WebRequestMapping;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author zhaojiulin
  * @version 1.0
- * @description: TODO
+ * @description: 请求映射单例
  * @date 2025/10/21 23:38
  */
 public class HandleMethodMappingHolder {
@@ -57,12 +58,16 @@ public class HandleMethodMappingHolder {
         WebController webControllerAnnotation =
                 controllerClass.getAnnotation(WebController.class);
         String basePath = webControllerAnnotation.value();
+        WebRequestMapping parentRequest = controllerClass.getAnnotation(WebRequestMapping.class);
         for (Method method : controllerClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(WebRequestMapping.class)) {
                 WebRequestMapping mappingAnnotation =
                         method.getAnnotation(WebRequestMapping.class);
                 String path = basePath + mappingAnnotation.value();
                 RequestMethod requestMethod = mappingAnnotation.method();
+                if(Objects.nonNull(parentRequest)) {
+                    path = parentRequest.value() + path;
+                }
                 String key = requestMethod.name() + ":" + path;
                 Parameter[] parameters = method.getParameters();
                 LinkedHashMap<String, Class<?>> params = new LinkedHashMap<>();

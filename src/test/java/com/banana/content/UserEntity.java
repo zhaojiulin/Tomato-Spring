@@ -8,6 +8,15 @@ package com.banana.content;
  */
 public class UserEntity {
     private String title;
+    private Integer age;
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
 
     public String getTitle() {
         return title;
