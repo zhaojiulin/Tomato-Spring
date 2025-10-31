@@ -10,14 +10,14 @@ import com.tomato.sprout.web.serve.TomcatEmbeddedServer;
 public class TomatoBootApplication {
 
     public static void start(Class<?> primarySource, String[] args) {
-        new TomatoBootApplication().run(primarySource, args);
+        run(primarySource, args);
     }
 
     public static TomatoApplicationContext startContext(Class<?> primarySource, String[] args) {
-        return new TomatoBootApplication().run(primarySource, args);
+        return run(primarySource, args);
     }
 
-    private TomatoApplicationContext run(Class<?> primarySource, String[] args) {
+    private static TomatoApplicationContext run(Class<?> primarySource, String[] args) {
         // 创建上下文
         TomatoApplicationContext context = new TomatoApplicationContext();
         // 扫描并注册bean
