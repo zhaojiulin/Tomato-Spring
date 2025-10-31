@@ -70,19 +70,11 @@ public class TomatoApplicationContext {
         if (clazz.isAnnotation() || clazz.isInterface()) {
             return;
         }
+        // 是否有标记这个类是bean
         if (!clazz.isAnnotationPresent(Component.class) && !clazz.isAnnotationPresent(WebController.class)) {
             return;
         }
-        String beanName = "";
-        // 是否有标记这个类是bean
-        if (clazz.isAnnotationPresent(Component.class)) {
-            Component componentAnno = clazz.getDeclaredAnnotation(Component.class);
-            // beanName获取
-            beanName = componentAnno.value();
-        }
-        if (beanName.isEmpty()) {
-            beanName = clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1);
-        }
+        String beanName = getClassBeanName(clazz);
         // 解析类，判断当前bean是单例bean，还是原型bean;创建bean信息BeanDefinition
         BeanDefinition beanDefinition = new BeanDefinition();
         beanDefinition.setClazz(clazz);
@@ -105,7 +97,7 @@ public class TomatoApplicationContext {
                 .filter(beanDefinition -> BeanPostProcessor.class.isAssignableFrom(beanDefinition.getClazz()))
                 .toList();
         for (BeanDefinition beanDefinition : processorBeanDefinition) {
-            Object bean = createBean(beanDefinition.getClazz().getName(), beanDefinition);
+            Object bean = getBean(getClassBeanName(beanDefinition.getClazz()));
             beanPostProcessors.add((BeanPostProcessor) bean);
         }
     }
@@ -115,7 +107,7 @@ public class TomatoApplicationContext {
      */
     public void refreshBean() {
         beanDefinitionMap.forEach((beanName, beanDefinition) -> {
-            Object bean = createBean(beanName, beanDefinition);
+            Object bean =getBean(getClassBeanName(beanDefinition.getClazz()));
             singletonObjects.put(beanName, bean);
             HandleMethodMappingHolder.getInstance().processController(beanDefinition.getClazz(), bean);
         });
@@ -231,5 +223,18 @@ public class TomatoApplicationContext {
         } else {
             throw new NullPointerException();
         }
+    }
+
+    private String getClassBeanName(Class<?> clazz) {
+        String beanName = "";
+        if (clazz.isAnnotationPresent(Component.class)) {
+            Component componentAnno = clazz.getDeclaredAnnotation(Component.class);
+            // beanName获取
+            beanName = componentAnno.value();
+        }
+        if (beanName.isEmpty()) {
+            beanName = clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1);
+        }
+        return beanName;
     }
 }
