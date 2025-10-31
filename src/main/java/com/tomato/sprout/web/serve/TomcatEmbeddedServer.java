@@ -59,7 +59,7 @@ public class TomcatEmbeddedServer implements EmbeddedServer {
             tomcat.start();
             System.out.println("MiniBoot application started on port: " + this.port);
 
-            //tomcat.getServer().await();
+            tomcat.getServer().await();
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to start embedded Tomcat", e);

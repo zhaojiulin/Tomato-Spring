@@ -1,4 +1,4 @@
-package com.tomato.sprout.handle;
+package com.tomato.sprout.interfaces;
 /**
  * @Description: bean自定义初始化前后接口实现
  * 实现InitializingBean接口自定义初始化

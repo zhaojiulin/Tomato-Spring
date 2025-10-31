@@ -1,7 +1,7 @@
 package com.banana;
 
 import com.tomato.sprout.anno.Component;
-import com.tomato.sprout.handle.BeanPostProcessor;
+import com.tomato.sprout.interfaces.BeanPostProcessor;
 
 import java.util.Locale;
 

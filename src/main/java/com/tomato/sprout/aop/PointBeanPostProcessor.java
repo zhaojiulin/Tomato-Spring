@@ -1,7 +1,7 @@
 package com.tomato.sprout.aop;
 
 import com.tomato.sprout.anno.Component;
-import com.tomato.sprout.handle.BeanPostProcessor;
+import com.tomato.sprout.interfaces.BeanPostProcessor;
 
 /****
  * @Description: AOP后置实现

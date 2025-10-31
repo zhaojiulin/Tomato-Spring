@@ -7,10 +7,10 @@ import com.tomato.sprout.constant.BeanScopeType;
 import com.tomato.sprout.core.BeanDefinition;
 import com.tomato.sprout.core.CircularDependencyCheck;
 import com.tomato.sprout.core.ClassPathScanner;
-import com.tomato.sprout.handle.ApplicationContextAware;
-import com.tomato.sprout.handle.BeanNameAware;
-import com.tomato.sprout.handle.BeanPostProcessor;
-import com.tomato.sprout.handle.InitializingBean;
+import com.tomato.sprout.interfaces.ApplicationContextAware;
+import com.tomato.sprout.interfaces.BeanNameAware;
+import com.tomato.sprout.interfaces.BeanPostProcessor;
+import com.tomato.sprout.interfaces.InitializingBean;
 import com.tomato.sprout.web.anno.WebController;
 import com.tomato.sprout.web.mapping.HandleMethodMappingHolder;
 
